@@ -1,0 +1,20 @@
+library(tidyverse)
+library(splitstackshape)
+
+#the original dataset
+EMR_demo <- read.csv("filepath/EMR demo.csv")
+
+#randomly sample 50 primary-status artists by race and gender first (gender and BIPOC column)
+gender <- stratified(EMR_demo, c("gender", "BIPOC"), 50, select = list(gender = 1, BIPOC = 1), replace = FALSE)
+#use anti-join to remove the gender sample from EMR_demo to ensure you don't sample the same artist twice
+EMR_demo <- anti_join(EMR_demo, gender)
+
+#randomly sample 50 additional primary-status artists by race (BIPOC column) and remove from original dataset
+BIPOC <- stratified(EMR_demo, c("BIPOC"), 50, select = list(BIPOC = 1), replace = FALSE)
+EMR_demo <- anti_join(EMR_demo, BIPOC)
+#select 100 additional artists using sample_n
+others <- sample_n(EMR_demo, 100)
+
+#combine all subsamples into new sample, save as csv
+new_demo <- rbind(BIPOC, gender, others)
+write.csv(new_demo, file = "filepath/EMR_new_demo.csv")
